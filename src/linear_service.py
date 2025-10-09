@@ -1,6 +1,6 @@
 import requests
-from src.variables import Variables
-from src.graph_query import mutation, QUERY_WITH_TEAM, TEAM_BY_NAME
+from variables import Variables
+from graph_query import mutation, QUERY_WITH_TEAM, TEAM_BY_NAME
 from uuid import UUID
 
 
@@ -19,17 +19,22 @@ def get_team_nodes(response_json: dict) -> list[dict]:
         raise RuntimeError(f"Unexpected teams format: {teams}")
     return teams
 
+def response_status_check(response: requests.Response) -> Exception | None:
+    """Check the response status and return an exception if there's an error."""
+    if response.status_code != 200:
+        return Exception(f"HTTP {response.status_code}: {response.text}")
+
+    if "errors" in response.json():
+        return Exception(f"GraphQL errors: {response.json().get('errors')}")
+
+    return None
 
 def get_team_id_by_name(api_url: str, team_id: str, headers: dict) -> UUID | None:
     """Fetch the team ID from Linear by team name."""
     payload = {"query": TEAM_BY_NAME, "variables": {"name": team_id}}
     resp = requests.post(api_url, json=payload, headers=headers, timeout=10)
+    response_status_check(resp)
     body = resp.json()
-
-    if resp.status_code != 200:
-        raise RuntimeError(f"HTTP {resp.status_code}: {body}")
-    if "errors" in body:
-        raise RuntimeError(f"GraphQL errors: {body['errors']}")
 
     nodes = get_team_nodes(body)
     if len(nodes) == 0:
@@ -74,19 +79,8 @@ def get_issues_if_it_exists(
         "variables": {"title": issue_title, "teamId": team_id},
     }
     response = requests.post(API_URL, json=payload, headers=headers, timeout=10)
-    try:
-        body = response.json()
-    except ValueError:
-        response.raise_for_status()
-        print(f"Failed to parse JSON response: {response.text}")
-
-    if response.status_code != 200:
-        raise requests.HTTPError(
-            f"HTTP {response.status_code}: {body}", response=response
-        )
-
-    if "errors" in body:
-        raise RuntimeError(f"GraphQL errors: {body['errors']}")
+    response_status_check(response)
+    body = response.json()
 
     issues = get_issues_from_json(body)
     print(f"Checked existence for title '{issue_title}': {len(issues)} match(es).")
@@ -103,26 +97,13 @@ def run_query(variables: list, headers: dict, API_URL: str, team: str) -> None:
         resp = requests.post(
             API_URL, json={"query": mutation, "variables": input_obj}, headers=headers
         )
-        try:
-            body = resp.json()
-        except ValueError:
-            raise RuntimeError(
-                f"Non-JSON response (HTTP {resp.status_code}): {resp.text[:500]}"
-            )
-
-        if resp.status_code != 200:
-            raise RuntimeError(f"HTTP {resp.status_code} from Linear: {body}")
-
-        if "errors" in body:
-            # Typical causes: missing teamId, wrong field names (snake_case), invalid values, or auth
-            raise RuntimeError(
-                f"GraphQL errors creating '{input_obj.get('title')}': {body['errors']}"
-            )
+        response_status_check(resp)
+        body = resp.json()
 
         result = (body.get("data") or {}).get("issueCreate") or {}
         if not result.get("success"):
             # success=false or unexpected shape
             raise RuntimeError(f"Create failed for '{input_obj.get('title')}': {body}")
 
-        issue = result["issue"]
-        print(f"Created {issue['identifier']} → {issue['url']}")
+        issue = result.get("issue")
+        print(f"Created {issue.get('identifier')} → {issue.get('url')}")
