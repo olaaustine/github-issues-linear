@@ -1,5 +1,5 @@
 from github import Github
-from config import Config
+from src.config import Config
 
 
 def get_client() -> Github:

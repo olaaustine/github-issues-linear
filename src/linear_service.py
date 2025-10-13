@@ -1,7 +1,8 @@
 import requests
-from variables import Variables
-from graph_query import mutation, QUERY_WITH_TEAM, TEAM_BY_NAME
+from src.variables import Variables
+from src.graph_query import mutation, QUERY_WITH_TEAM, TEAM_BY_NAME
 from uuid import UUID
+from src.errors import GraphQLError, ResponseNot200Error
 
 
 def return_headers(api_key: str) -> dict:
@@ -19,15 +20,17 @@ def get_team_nodes(response_json: dict) -> list[dict]:
         raise RuntimeError(f"Unexpected teams format: {teams}")
     return teams
 
-def response_status_check(response: requests.Response) -> Exception | None:
+
+def response_status_check(response: requests.Response) -> None:
     """Check the response status and return an exception if there's an error."""
     if response.status_code != 200:
-        return Exception(f"HTTP {response.status_code}: {response.text}")
+        raise ResponseNot200Error(f"HTTP {response.status_code}: {response.text}")
 
     if "errors" in response.json():
-        return Exception(f"GraphQL errors: {response.json().get('errors')}")
+        raise GraphQLError(f"GraphQL errors: {response.json().get('errors')}")
 
     return None
+
 
 def get_team_id_by_name(api_url: str, team_id: str, headers: dict) -> UUID | None:
     """Fetch the team ID from Linear by team name."""
@@ -102,7 +105,7 @@ def run_query(variables: list, headers: dict, API_URL: str, team: str) -> None:
 
         result = (body.get("data") or {}).get("issueCreate") or {}
         if not result.get("success"):
-            # success=false or unexpected shape
+            # If creation failed, raise an error with details
             raise RuntimeError(f"Create failed for '{input_obj.get('title')}': {body}")
 
         issue = result.get("issue")
