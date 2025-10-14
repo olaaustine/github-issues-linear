@@ -5,6 +5,7 @@ from src.github_client_service import (
     get_repo_object,
     get_repo_issues,
 )
+from github import GithubException
 
 
 # Test get_client
@@ -46,6 +47,23 @@ def test_get_repo_object(mock_github):
     assert mock_client.get_repo.call_count == 2
 
 
+@patch("src.github_client_service.Github")
+def test_get_repo_object_with_exception(mock_github):
+    def side_effect(name):
+        if name == "repo1":
+            return "repo_obj_repo1"
+        else:
+            raise GithubException(404, {"message": "Not Found"})
+
+    mock_client = MagicMock()
+    mock_client.get_repo.side_effect = side_effect
+
+    repos = ["repo1", "repo2"]
+    repo_objs = get_repo_object(mock_client, repos)
+
+    assert repo_objs == ["repo_obj_repo1"]  # Only the valid one is returned
+
+
 # Test get_repo_issues
 def test_get_repo_issues():
     mock_repo1 = MagicMock()
@@ -58,5 +76,24 @@ def test_get_repo_issues():
     repo_objects = [mock_repo1, mock_repo2]
     issues = get_repo_issues(repo_objects)
     assert issues == [mock_issue1, mock_issue2, mock_issue3]
+    mock_repo1.get_issues.assert_called_once_with(state="open")
+    mock_repo2.get_issues.assert_called_once_with(state="open")
+
+
+def test_get_repo_issues_with_exception():
+    mock_repo1 = MagicMock()
+    mock_repo2 = MagicMock()
+    mock_issue1 = MagicMock()
+    mock_issue2 = MagicMock()
+    mock_repo1.get_issues.return_value = [mock_issue1, mock_issue2]
+    mock_repo2.get_issues.side_effect = GithubException(
+        500, {"message": "Server Error"}
+    )
+    repo_objects = [mock_repo1, mock_repo2]
+    issues = get_repo_issues(repo_objects)
+    assert issues == [
+        mock_issue1,
+        mock_issue2,
+    ]  # Only issues from the first repo are returned
     mock_repo1.get_issues.assert_called_once_with(state="open")
     mock_repo2.get_issues.assert_called_once_with(state="open")
