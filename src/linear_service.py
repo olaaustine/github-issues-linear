@@ -72,7 +72,6 @@ def get_issues_from_json(response_json: dict) -> list[dict]:
 
 
 def get_issues_if_it_exists(
-    team: str,
     issue_title: str,
     API_URL: str,
     headers: dict,
