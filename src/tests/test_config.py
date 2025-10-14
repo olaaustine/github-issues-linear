@@ -3,11 +3,11 @@ from src.config import Config
 
 def test_default_config():
     config = Config()
-    assert config.github_key == "default_secret_key"
-    assert config.linear_api_key == "default_api_key"
+    assert config.github_key == ""
+    assert config.linear_api_key == ""
     assert config.linear_api_url == "https://api.linear.app/graphql"
     assert config.repository == []
-    assert config.team_id == "OJA"
+    assert config.team_id == ""
 
 
 def test_env_config(monkeypatch):

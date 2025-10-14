@@ -5,12 +5,8 @@ from typing import List
 
 @dataclass
 class Config:
-    github_key: str = field(
-        default_factory=lambda: os.getenv("GITHUB_KEY", "default_secret_key")
-    )
-    linear_api_key: str = field(
-        default_factory=lambda: os.getenv("API_KEY", "default_api_key")
-    )
+    github_key: str = field(default_factory=lambda: os.getenv("GITHUB_KEY", ""))
+    linear_api_key: str = field(default_factory=lambda: os.getenv("API_KEY", ""))
     linear_api_url: str = field(
         default_factory=lambda: os.getenv("API_URL", "https://api.linear.app/graphql")
     )
@@ -21,4 +17,4 @@ class Config:
             if repo.strip()
         ]
     )
-    team_id: str = field(default_factory=lambda: os.getenv("TEAM_ID", "OJA"))
+    team_id: str = field(default_factory=lambda: os.getenv("TEAM_ID", ""))
