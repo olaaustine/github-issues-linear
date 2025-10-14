@@ -5,7 +5,7 @@ from src.config import Config
 def get_client() -> Github:
     """Get GitHub client using the key from config"""
     config = Config()
-    github_key = config.get_github_key
+    github_key = config.github_key
     client = Github(github_key)
     return client
 
@@ -13,7 +13,7 @@ def get_client() -> Github:
 def get_repository() -> list[str]:
     """Get list of repository names from config"""
     config = Config()
-    repository = config.get_repository
+    repository = config.repository
     return repository
 
 

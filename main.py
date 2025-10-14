@@ -28,12 +28,10 @@ def make_everything_work_together():
 
         # Convert to Linear variables and create issues
         config = Config()
-        headers = return_headers(config.get_linear_api_key)
-        team_id = get_team_id_by_name(
-            config.get_linear_api_url, config.get_team_id, headers
-        )
+        headers = return_headers(config.linear_api_key)
+        team_id = get_team_id_by_name(config.linear_api_url, config.team_id, headers)
         variables = get_data_and_populate_variables(issues, team_id)
-        run_query(variables, headers, config.get_linear_api_url, config.get_team_id)
+        run_query(variables, headers, config.linear_api_url, team_id)
 
         print(f"Successfully processed {len(issues)} GitHub issues")
 

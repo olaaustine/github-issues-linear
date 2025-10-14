@@ -50,7 +50,9 @@ def get_team_id_by_name(api_url: str, team_id: str, headers: dict) -> UUID | Non
     return None
 
 
-def get_data_and_populate_variables(list_issues: list, team_id: str) -> list[Variables]:
+def get_data_and_populate_variables(
+    list_issues: list, team_id: UUID
+) -> list[Variables]:
     """Convert GitHub issues to Linear Variables."""
     variables = []
     for issue in list_issues:
@@ -74,9 +76,10 @@ def get_issues_if_it_exists(
     issue_title: str,
     API_URL: str,
     headers: dict,
+    team_id: UUID,
 ) -> bool | None:
     """Check if an issue with the given title already exists in Linear in the same team."""
-    team_id = get_team_id_by_name(API_URL, team, headers)
+
     payload = {
         "query": QUERY_WITH_TEAM,
         "variables": {"title": issue_title, "teamId": team_id},
@@ -90,11 +93,11 @@ def get_issues_if_it_exists(
     return len(issues) > 0
 
 
-def run_query(variables: list, headers: dict, API_URL: str, team: str) -> None:
+def run_query(variables: list, headers: dict, API_URL: str, team: UUID) -> None:
     """Create issues in Linear from the provided variables."""
     for var in variables:
         input_obj = var.as_input()
-        if get_issues_if_it_exists(team, var.title, API_URL, headers):
+        if get_issues_if_it_exists(var.title, API_URL, headers, team):
             print(f"Issue with title '{var.title}' already exists. Skipping creation.")
             continue
         resp = requests.post(
