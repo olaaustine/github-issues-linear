@@ -5,10 +5,12 @@ WORKDIR /app
 # Install project dependencies
 COPY requirements.txt ./
 RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install pytest
 
 # Copy the rest of the application
 COPY src ./src
 COPY main.py ./
 
-# Set the default command to run your scheduler
+ENV PYTHONPATH=/app
+# Default: run the app
 CMD ["python", "main.py"]

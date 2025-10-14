@@ -1,10 +1,15 @@
 from unittest.mock import patch, MagicMock
-import github_client_service
+from src.github_client_service import (
+    get_client,
+    get_repository,
+    get_repo_object,
+    get_repo_issues,
+)
 
 
 # Test get_client
-@patch("github_client_service.Config")
-@patch("github_client_service.Github")
+@patch("src.github_client_service.Config")
+@patch("src.github_client_service.Github")
 def test_get_client(mock_github, mock_config):
     mock_config_instance = MagicMock()
     mock_config_instance.github_key = "fake_key"
@@ -12,31 +17,31 @@ def test_get_client(mock_github, mock_config):
     mock_github_instance = MagicMock()
     mock_github.return_value = mock_github_instance
 
-    client = github_client_service.get_client()
+    client = get_client()
     mock_config.assert_called_once()
     mock_github.assert_called_once_with("fake_key")
     assert client == mock_github_instance
 
 
 # Test get_repository
-@patch("github_client_service.Config")
+@patch("src.github_client_service.Config")
 def test_get_repository(mock_config):
     mock_config_instance = MagicMock()
     mock_config_instance.repository = ["repo1", "repo2"]
     mock_config.return_value = mock_config_instance
 
-    repos = github_client_service.get_repository()
+    repos = get_repository()
     mock_config.assert_called_once()
     assert repos == ["repo1", "repo2"]
 
 
 # Test get_repo_object
-@patch("github_client_service.Github")
+@patch("src.github_client_service.Github")
 def test_get_repo_object(mock_github):
     mock_client = MagicMock()
     mock_client.get_repo.side_effect = lambda name: f"repo_obj_{name}"
     repos = ["repo1", "repo2"]
-    repo_objs = github_client_service.get_repo_object(mock_client, repos)
+    repo_objs = get_repo_object(mock_client, repos)
     assert repo_objs == ["repo_obj_repo1", "repo_obj_repo2"]
     assert mock_client.get_repo.call_count == 2
 
@@ -51,7 +56,7 @@ def test_get_repo_issues():
     mock_repo1.get_issues.return_value = [mock_issue1, mock_issue2]
     mock_repo2.get_issues.return_value = [mock_issue3]
     repo_objects = [mock_repo1, mock_repo2]
-    issues = github_client_service.get_repo_issues(repo_objects)
+    issues = get_repo_issues(repo_objects)
     assert issues == [mock_issue1, mock_issue2, mock_issue3]
     mock_repo1.get_issues.assert_called_once_with(state="open")
     mock_repo2.get_issues.assert_called_once_with(state="open")

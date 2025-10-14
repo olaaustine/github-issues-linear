@@ -1,4 +1,4 @@
-from config import Config  # Fixed import for test discovery
+from src.config import Config
 
 
 def test_default_config():

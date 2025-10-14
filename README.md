@@ -71,6 +71,10 @@ This project addresses the common need for engineering and product teams to keep
      ```sh
      docker run --env-file .env github-issues-linear
      ```
+  3. Run tests:
+     ```sh
+     docker run github-issues-linear pytest
+     ```
 
 ## Configuration
 - All configuration options (API keys, repository, team ID) can be set via environment variables or a config file in `src/config.py`.
