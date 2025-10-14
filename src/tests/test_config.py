@@ -6,7 +6,7 @@ def test_default_config():
     assert config.github_key == "default_secret_key"
     assert config.linear_api_key == "default_api_key"
     assert config.linear_api_url == "https://api.linear.app/graphql"
-    assert config.repository == ["Ensembl/ensembl-vep"]
+    assert config.repository == []
     assert config.team_id == "OJA"
 
 
