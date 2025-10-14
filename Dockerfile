@@ -5,7 +5,6 @@ WORKDIR /app
 # Install project dependencies
 COPY requirements.txt ./
 RUN pip install --upgrade pip && pip install -r requirements.txt
-RUN pip install pytest
 
 # Copy the rest of the application
 COPY src ./src
