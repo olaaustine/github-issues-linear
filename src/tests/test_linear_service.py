@@ -33,7 +33,7 @@ def test_get_team_nodes_valid():
 
 def test_get_team_nodes_invalid():
     response_json = {"data": {"teams": {"nodes": "notalist"}}}
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         get_team_nodes(response_json)
 
 
@@ -111,7 +111,7 @@ def test_get_issues_from_json_valid():
 
 def test_get_issues_from_json_invalid():
     response_json = {"data": {"issues": {"nodes": "notalist"}}}
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ValueError):
         get_issues_from_json(response_json)
 
 

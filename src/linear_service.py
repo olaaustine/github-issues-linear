@@ -17,7 +17,7 @@ def get_team_nodes(response_json: dict) -> list[dict]:
     """Extract team nodes from the JSON response."""
     teams = response_json.get("data", {}).get("teams", {}).get("nodes", [])
     if not isinstance(teams, list):
-        raise RuntimeError(f"Unexpected teams format: {teams}")
+        raise ValueError(f"Unexpected teams format: {teams}")
     return teams
 
 
@@ -67,7 +67,7 @@ def get_issues_from_json(response_json: dict) -> list[dict]:
     """Extract issues from the JSON response."""
     issues = response_json.get("data", {}).get("issues", {}).get("nodes", [])
     if not isinstance(issues, list):
-        raise RuntimeError(f"Unexpected issues format: {issues}")
+        raise ValueError(f"Unexpected issues format: {issues}")
     return issues
 
 
