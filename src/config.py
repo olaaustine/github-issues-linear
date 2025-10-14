@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 
-@dataclass(frozen=True)
+@dataclass
 class Config:
     github_key: str = field(
         default_factory=lambda: os.getenv("GITHUB_KEY", "default_secret_key")
