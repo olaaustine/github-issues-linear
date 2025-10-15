@@ -22,6 +22,7 @@ def bootstrap():
         print(f"Error syncing issues: {e}")
 
 
+# TODO: Uncomment to enable scheduling
 # def schedule_sync():
 #     """Schedule the sync to run daily at 8am"""
 #     scheduler = BlockingScheduler()
