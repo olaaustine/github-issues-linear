@@ -2,6 +2,8 @@ from github import Github
 from src.config import Config
 from github.GithubException import GithubException
 from github.Issue import Issue
+from github.Repository import Repository
+from typing import Set
 
 
 class GitHubClientServie:
@@ -20,7 +22,7 @@ class GitHubClientServie:
         repositories = self.__config.repository
         return repositories
 
-    def __get_repo_objects(self) -> list:
+    def __get_repo_objects(self) -> Set[Repository]:
         """Safely get repository objects from the list of repository names"""
         repo_objects = []
         for repo_name in self.__get_repositories():
