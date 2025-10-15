@@ -1,5 +1,5 @@
 from src.github_client_service import (
-    GitHubClientServie,
+    GitHubClientService,
 )
 from src.linear_service import LinearService
 
@@ -8,7 +8,7 @@ def bootstrap():
     """Sync GitHub issues to Linear"""
     try:
         # Get GitHub client and repositories
-        github_client = GitHubClientServie()
+        github_client = GitHubClientService()
         issues = github_client.get_repo_issues()
 
         # Convert to Linear variables and create issues

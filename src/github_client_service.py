@@ -6,7 +6,7 @@ from github.Repository import Repository
 from typing import Set
 
 
-class GitHubClientServie:
+class GitHubClientService:
     def __init__(self):
         self.__config = Config()
         self.__github_key = self.__config.github_key
