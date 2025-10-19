@@ -33,8 +33,8 @@ def schedule_sync():
 
     logger.info("GitHub to Linear sync scheduler started. Will run daily at 8:00 AM")
 
-    def shutdown(signum, frame):
-        logger.info("Received shutdown signal. Stopping scheduler...")
+    def shutdown(signum: int, frame):
+        logger.info(f"Received shutdown signal {signum}. Stopping scheduler...")
         scheduler.shutdown(wait=False)
         sys.exit(0)
 
