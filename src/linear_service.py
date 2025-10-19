@@ -23,13 +23,6 @@ class LinearService:
             "Authorization": self.__linear_api_key,
         }
 
-    def __get_team_nodes(self, response_json: dict) -> list[dict]:
-        """Extract team nodes from the JSON response."""
-        teams = response_json.get("data", {}).get("teams", {}).get("nodes", [])
-        if not isinstance(teams, list):
-            raise ValueError(f"Unexpected teams format: {teams}")
-        return teams
-
     def __response_status_check(self, response: requests.Response) -> None:
         """Check the response status and return an exception if there's an error."""
         if response.status_code != 200:
@@ -42,6 +35,14 @@ class LinearService:
 
     def __get_team_id_by_name(self) -> UUID | None:
         """Fetch the team ID from Linear by team name."""
+
+        def get_team_nodes(response_json: dict) -> list[dict]:
+            """Extract team nodes from the JSON response."""
+            teams = response_json.get("data", {}).get("teams", {}).get("nodes", [])
+            if not isinstance(teams, list):
+                raise ValueError(f"Unexpected teams format: {teams}")
+            return teams
+
         payload = {"query": TEAM_BY_NAME, "variables": {"name": self.__team_id_str}}
         resp = requests.post(
             self.__api_url, json=payload, headers=self.__headers, timeout=10
@@ -49,7 +50,7 @@ class LinearService:
         self.__response_status_check(resp)
         body = resp.json()
 
-        nodes = self.__get_team_nodes(body)
+        nodes = get_team_nodes(body)
         if len(nodes) == 0:
             raise RuntimeError(
                 f"Warning : No teams found for name '{self.__team_id_str}'"
@@ -77,15 +78,15 @@ class LinearService:
 
         return variables
 
-    def __get_issues_from_json(self, response_json: dict) -> list[dict]:
-        """Extract issues from the JSON response."""
-        issues = response_json.get("data", {}).get("issues", {}).get("nodes", [])
-        if not isinstance(issues, list):
-            raise ValueError(f"Unexpected issues format: {issues}")
-        return issues
-
     def __get_issues_if_it_exists(self, issue_title: str) -> bool | None:
         """Check if an issue with the given title already exists in Linear in the same team."""
+
+        def get_issues_from_json(response_json: dict) -> list[dict]:
+            """Extract issues from the JSON response."""
+            issues = response_json.get("data", {}).get("issues", {}).get("nodes", [])
+            if not isinstance(issues, list):
+                raise ValueError(f"Unexpected issues format: {issues}")
+            return issues
 
         payload = {
             "query": QUERY_WITH_TEAM,
@@ -97,7 +98,7 @@ class LinearService:
         self.__response_status_check(response)
         body = response.json()
 
-        issues = self.__get_issues_from_json(body)
+        issues = get_issues_from_json(body)
         print(f"Checked existence for title '{issue_title}': {len(issues)} match(es).")
         return len(issues) > 0
 

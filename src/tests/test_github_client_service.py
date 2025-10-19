@@ -1,6 +1,6 @@
 from unittest.mock import patch, MagicMock
 from github import GithubException
-from src.github_client_service import GitHubClientServie
+from src.github_client_service import GitHubClientService
 
 
 @patch("src.github_client_service.Config")
@@ -12,8 +12,8 @@ def test_get_client_returns_github_instance(mock_github, mock_config):
     mock_github_instance = MagicMock()
     mock_github.return_value = mock_github_instance
 
-    service = GitHubClientServie()
-    assert isinstance(service._GitHubClientServie__client, MagicMock)
+    service = GitHubClientService()
+    assert isinstance(service._GitHubClientService__client, MagicMock)
     mock_config.assert_called_once()
     mock_github.assert_called_once_with("fake_key")
 
@@ -31,8 +31,8 @@ def test_get_repo_objects_returns_valid_repos(mock_config, mock_github):
     mock_repo2 = MagicMock()
     mock_github_instance.get_repo.side_effect = [mock_repo1, mock_repo2]
 
-    service = GitHubClientServie()
-    repos = service._GitHubClientServie__get_repo_objects()
+    service = GitHubClientService()
+    repos = service._GitHubClientService__get_repo_objects()
     assert repos == [mock_repo1, mock_repo2]
     assert mock_github_instance.get_repo.call_count == 2
 
@@ -52,8 +52,8 @@ def test_get_repo_objects_handles_exceptions(mock_config, mock_github):
         GithubException(404, {"message": "Not Found"}),
     ]
 
-    service = GitHubClientServie()
-    repos = service._GitHubClientServie__get_repo_objects()
+    service = GitHubClientService()
+    repos = service._GitHubClientService__get_repo_objects()
     assert repos == [mock_repo1]
 
 
@@ -72,7 +72,7 @@ def test_get_repo_issues_returns_all_open_issues(mock_config, mock_github):
     mock_repo.get_issues.return_value = [mock_issue1, mock_issue2]
     mock_github_instance.get_repo.return_value = mock_repo
 
-    service = GitHubClientServie()
+    service = GitHubClientService()
     issues = service.get_repo_issues()
     assert issues == [mock_issue1, mock_issue2]
     mock_repo.get_issues.assert_called_once_with(state="open")
@@ -96,7 +96,7 @@ def test_get_repo_issues_skips_repos_on_exception(mock_config, mock_github):
     )
     mock_github_instance.get_repo.side_effect = [mock_repo1, mock_repo2]
 
-    service = GitHubClientServie()
+    service = GitHubClientService()
     issues = service.get_repo_issues()
     assert issues == [mock_issue]
     mock_repo1.get_issues.assert_called_once_with(state="open")
