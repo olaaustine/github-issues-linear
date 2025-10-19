@@ -1,5 +1,5 @@
 class GraphQLError(Exception):
-    """Base class for all GraphQL related errors."""
+    """Base class for all GraphQL related errors. Raised when a GraphQL operation fails."""
 
     pass
 
