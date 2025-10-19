@@ -2,6 +2,7 @@ from src.github_client_service import (
     GitHubClientService,
 )
 from src.linear_service import LinearService
+from loguru import logger
 
 
 def bootstrap():
@@ -16,10 +17,10 @@ def bootstrap():
         variables = linear_client.get_data_and_populate_variables(issues)
         linear_client.run_query(variables)
 
-        print(f"Successfully processed {len(issues)} GitHub issues")
+        logger.success(f"Successfully processed {len(issues)} GitHub issues")
 
     except Exception as e:
-        print(f"Error syncing issues: {e}")
+        logger.error(f"Error syncing issues: {e}")
 
 
 # TODO: Uncomment to enable scheduling

@@ -1,6 +1,7 @@
 import requests
 from uuid import UUID
 from github.Issue import Issue
+from loguru import logger
 from src.variables import Variables
 from src.graph_query import mutation, QUERY_WITH_TEAM, TEAM_BY_NAME
 from src.errors import GraphQLError, ResponseNot200Error
@@ -23,15 +24,13 @@ class LinearService:
             "Authorization": self.__linear_api_key,
         }
 
-    def __response_status_check(self, response: requests.Response) -> None:
+    def __response_status_check(self, response: requests.Response):
         """Check the response status and return an exception if there's an error."""
         if response.status_code != 200:
             raise ResponseNot200Error(f"HTTP {response.status_code}: {response.text}")
 
         if "errors" in response.json():
             raise GraphQLError(f"GraphQL errors: {response.json().get('errors')}")
-
-        return None
 
     def __get_team_id_by_name(self) -> UUID | None:
         """Fetch the team ID from Linear by team name."""
@@ -99,7 +98,9 @@ class LinearService:
         body = response.json()
 
         issues = get_issues_from_json(body)
-        print(f"Checked existence for title '{issue_title}': {len(issues)} match(es).")
+        logger.info(
+            f"Checked existence for title '{issue_title}': {len(issues)} match(es)."
+        )
         return len(issues) > 0
 
     def run_query(self, variables: list) -> None:
@@ -107,7 +108,7 @@ class LinearService:
         for var in variables:
             input_obj = var.as_input()
             if self.__get_issues_if_it_exists(var.title):
-                print(
+                logger.info(
                     f"Issue with title '{var.title}' already exists. Skipping creation."
                 )
                 continue
@@ -127,4 +128,4 @@ class LinearService:
                 )
 
             issue = result.get("issue")
-            print(f"Created {issue.get('identifier')} → {issue.get('url')}")
+            logger.success(f"Created {issue.get('identifier')} → {issue.get('url')}")

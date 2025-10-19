@@ -1,9 +1,10 @@
 from github import Github
-from src.config import Config
+from typing import Set
+from loguru import logger
 from github.GithubException import GithubException
 from github.Issue import Issue
 from github.Repository import Repository
-from typing import Set
+from src.config import Config
 
 
 class GitHubClientService:
@@ -30,7 +31,7 @@ class GitHubClientService:
                 repo = self.__client.get_repo(repo_name)
                 repo_objects.append(repo)
             except GithubException as e:
-                print(
+                logger.error(
                     f"Failed to fetch repo '{repo_name}': {e.status} - {e.data.get('message')}"
                 )
         return repo_objects
@@ -44,7 +45,7 @@ class GitHubClientService:
                 issues = repo.get_issues(state="open")
                 all_issues.extend(issues)
             except GithubException as e:
-                print(
+                logger.error(
                     f"Failed to fetch issues for repo '{repo.full_name}': {e.status} - {e.data.get('message')}"
                 )
                 continue
