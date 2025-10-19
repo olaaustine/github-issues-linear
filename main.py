@@ -1,8 +1,11 @@
+from loguru import logger
+import sys
+import signal
+from apscheduler.schedulers.blocking import BlockingScheduler
 from src.github_client_service import (
     GitHubClientService,
 )
 from src.linear_service import LinearService
-from loguru import logger
 
 
 def bootstrap():
@@ -23,20 +26,23 @@ def bootstrap():
         logger.error(f"Error syncing issues: {e}")
 
 
-# TODO: Uncomment to enable scheduling
-# def schedule_sync():
-#     """Schedule the sync to run daily at 8am"""
-#     scheduler = BlockingScheduler()
-#     scheduler.add_job(, "cron", hour=8, minute=0)
-#
-#     print("GitHub to Linear sync scheduler started. Will run daily at 8:00 AM")
-#     logging.basicConfig(level=logging.INFO)
-#
-#     try:
-#         scheduler.start()
-#     except KeyboardInterrupt:
-#         print("Scheduler stopped")
+def schedule_sync():
+    """Schedule the sync to run daily at 8am"""
+    scheduler = BlockingScheduler()
+    scheduler.add_job(bootstrap, "cron", hour=8, minute=0)
+
+    logger.info("GitHub to Linear sync scheduler started. Will run daily at 8:00 AM")
+
+    def shutdown(signum, frame):
+        logger.info("Received shutdown signal. Stopping scheduler...")
+        scheduler.shutdown(wait=False)
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGINT, shutdown)
+
+    scheduler.start()
 
 
 if __name__ == "__main__":
-    bootstrap()
+    schedule_sync()
