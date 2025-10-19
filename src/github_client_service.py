@@ -21,16 +21,11 @@ class GitHubClientService:
     def __get_repo_objects(self) -> Set[Repository]:
         """Safely get repository objects from the list of repository names"""
 
-        def get_repositories() -> list[str]:
-            """Get list of repository names from config"""
-            repositories = self.__config.repository
-            return repositories
-
-        repo_objects = []
-        for repo_name in get_repositories():
+        repo_objects = set()
+        for repo_name in self.__config.repository:
             try:
                 repo = self.__client.get_repo(repo_name)
-                repo_objects.append(repo)
+                repo_objects.add(repo)
             except GithubException as e:
                 logger.error(
                     f"Failed to fetch repo '{repo_name}': {e.status} - {e.data.get('message')}"

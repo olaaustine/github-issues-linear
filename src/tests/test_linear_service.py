@@ -56,8 +56,8 @@ def test_get_data_and_populate_variables_success(mock_post):
 
 # Test for run_query_creates_new
 @patch("src.linear_service.requests.post")
-@patch("src.linear_service.LinearService._LinearService__get_issues_if_it_exists")
-def test_run_query_creates_new(mock_exists, mock_post):
+# TODO - move the patch to a mock
+def test_run_query_creates_new(mock_post):
     # Mock the response for team lookup
     mock_team_response = MagicMock()
     mock_team_response.status_code = 200
@@ -85,9 +85,11 @@ def test_run_query_creates_new(mock_exists, mock_post):
         ),
     ]
 
+    mock_exists = MagicMock()
     mock_exists.return_value = False
 
     linear_service = LinearService()
+    linear_service._LinearService__get_issues_if_it_exists = mock_exists
     var = MagicMock()
     var.title = "title"
     var.as_input.return_value = {"foo": "bar"}
