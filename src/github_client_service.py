@@ -18,15 +18,16 @@ class GitHubClientService:
         client = Github(self.__github_key)
         return client
 
-    def __get_repositories(self) -> list[str]:
-        """Get list of repository names from config"""
-        repositories = self.__config.repository
-        return repositories
-
     def __get_repo_objects(self) -> Set[Repository]:
         """Safely get repository objects from the list of repository names"""
+
+        def get_repositories() -> list[str]:
+            """Get list of repository names from config"""
+            repositories = self.__config.repository
+            return repositories
+
         repo_objects = []
-        for repo_name in self.__get_repositories():
+        for repo_name in get_repositories():
             try:
                 repo = self.__client.get_repo(repo_name)
                 repo_objects.append(repo)
