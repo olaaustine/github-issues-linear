@@ -2,28 +2,30 @@ from loguru import logger
 import sys
 import signal
 from apscheduler.schedulers.blocking import BlockingScheduler
-from src.github_client_service import (
-    GitHubClientService,
+from src.github_client_service import GitHubClientService
+from src.linear.linear_create_issues import LinearCreateIssueService as LinearService
+from src.linear.linear_update_issues import (
+    LinearUpdateIssueService as LinearUpdateService,
 )
-from src.linear_service import LinearService
 
 
 def bootstrap():
-    """Sync GitHub issues to Linear"""
+    """Sync GitHub issues to Linear and update statuses."""
     try:
-        # Get GitHub client and repositories
         github_client = GitHubClientService()
-        issues = github_client.get_repo_issues()
-
-        # Convert to Linear variables and create issues
         linear_client = LinearService()
+
+        issues = github_client.get_repo_issues()
         variables = linear_client.get_data_and_populate_variables(issues)
         linear_client.run_query(variables)
 
         logger.success(f"Successfully processed {len(issues)} GitHub issues")
 
-    except Exception as e:
-        logger.error(f"Error syncing issues: {e}")
+        LinearUpdateService().check_all_linear_ticket_statuses()
+        github_client.close_done_issues_from_redis()
+
+    except Exception:
+        logger.exception("Error syncing issues")  # More descriptive logging
 
 
 def schedule_sync():

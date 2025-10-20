@@ -1,0 +1,28 @@
+services:
+  app:
+    build: .
+    container_name: github-issues-linear
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    command: ["python", "main.py"]
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    restart: always
+
+volumes:
+  redis_data:

@@ -1,0 +1,104 @@
+import requests
+from uuid import UUID
+from src.config import Config
+from src.errors import GraphQLError, ResponseNot200Error
+from src.graph_query import TEAM_BY_NAME, QUERY_WITH_TEAM
+
+
+def response_status_check(response: requests.Response):
+    """Check the response status and return an exception if there's an error."""
+    if response.status_code != 200:
+        raise ResponseNot200Error(f"HTTP {response.status_code}: {response.text}")
+
+    if "errors" in response.json():
+        raise GraphQLError(f"GraphQL errors: {response.json().get('errors')}")
+
+
+class LinearService:
+    def __init__(self):
+        self._config = Config()
+        self._linear_api_key = self._config.linear_api_key
+        self._team_id_str = self._config.team_id
+        self._api_url = self._config.linear_api_url
+        self._headers = self.return_headers()
+        self._team_id = self.get_team_id_by_name()
+
+    @property
+    def team_id(self) -> UUID | None:
+        return self._team_id
+
+    @property
+    def team_name(self) -> str:
+        return self._team_id_str
+
+    @property
+    def api_url(self) -> str:
+        return self._api_url
+
+    @property
+    def headers(self) -> dict:
+        return self._headers
+
+    @property
+    def linear_api_key(self) -> str:
+        return self._linear_api_key
+
+    def return_headers(self) -> dict:
+        """Return headers for Linear API requests"""
+        return {
+            "Content-Type": "application/json",
+            "Authorization": self._linear_api_key,
+        }
+
+    def get_team_id_by_name(self) -> UUID | None:
+        """Fetch the team ID from Linear by team name."""
+
+        def get_team_nodes(response_json: dict) -> list[dict]:
+            """Extract team nodes from the JSON response."""
+            teams = response_json.get("data", {}).get("teams", {}).get("nodes", [])
+            if not isinstance(teams, list):
+                raise ValueError(f"Unexpected teams format: {teams}")
+            return teams
+
+        payload = {"query": TEAM_BY_NAME, "variables": {"name": self._team_id_str}}
+        resp = requests.post(
+            self._api_url, json=payload, headers=self._headers, timeout=10
+        )
+        response_status_check(resp)
+        body = resp.json()
+
+        nodes = get_team_nodes(body)
+        if len(nodes) == 0:
+            raise RuntimeError(
+                f"Warning : No teams found for name '{self._team_id_str}'"
+            )
+
+        for node in nodes:
+            if node["name"].strip().lower() == self._team_id_str.strip().lower():
+                return node["id"]
+
+        return None
+
+    def get_ticket_if_it_exists(self, issue_title: str) -> list[dict]:
+        """Check if a ticket with the given issue title already exists in Linear in the same team."""
+
+        def get_ticket_from_json(response_json: dict) -> list[dict]:
+            """Extract issues from the JSON response."""
+            issues = response_json.get("data", {}).get("issues", {}).get("nodes", [])
+            if not isinstance(issues, list):
+                raise ValueError(f"Unexpected issues format: {issues}")
+            return issues
+
+        payload = {
+            "query": QUERY_WITH_TEAM,
+            "variables": {"title": issue_title, "teamId": str(self._team_id)},
+        }
+        response = requests.post(
+            self._api_url, json=payload, headers=self._headers, timeout=10
+        )
+        response_status_check(response)
+        body = response.json()
+
+        ticket = get_ticket_from_json(body)
+
+        return ticket

@@ -28,3 +28,17 @@ query TeamIdByName($name: String!) {
   }
 }
 """
+
+GET_TICKETS_STATUS = """query GetIssueStatus($id: String!) {
+  issue(id: $id) {
+    id
+    identifier
+    title
+    url
+    state {
+      id
+      name
+    }
+  }
+}
+"""

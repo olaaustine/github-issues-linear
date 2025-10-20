@@ -1,10 +1,14 @@
 from github import Github
 from typing import Set
 from loguru import logger
+import json
 from github.GithubException import GithubException
 from github.Issue import Issue
 from github.Repository import Repository
 from src.config import Config
+from src.redis import get_redis_client
+
+redis_client = get_redis_client()
 
 
 class GitHubClientService:
@@ -47,3 +51,39 @@ class GitHubClientService:
                 continue
 
         return all_issues
+
+    # TODO: Use issue number instead of title for more reliable issue closing
+    def __close_issue(self, issue_title: str) -> None:
+        """Close a GitHub issue by its title in the specified repository"""
+        for repo in self.__get_repo_objects():
+            try:
+                issues = repo.get_issues(state="open")
+                for issue in issues:
+                    if issue.title.strip().lower() == issue_title.strip().lower():
+                        issue.edit(state="closed")
+                        logger.info(
+                            f"Issue '{issue_title}' in '{repo}' closed successfully."
+                        )
+                        return
+                logger.warning(
+                    f"No open issue with title '{issue_title}' found in '{repo}'."
+                )
+            except GithubException as e:
+                logger.error(
+                    f"Failed to close issue '{issue_title}' in '{repo}': {e.status} - {e.data.get('message')}"
+                )
+
+    def close_done_issues_from_redis(self):
+        """Close GitHub issues whose Linear status is 'done' based on Redis cache."""
+        for key in redis_client.scan_iter("github_issue:*"):
+            data = redis_client.get(key)
+            if not data:
+                continue
+            issue_info = json.loads(data)
+            if (
+                issue_info.get("linear_status")
+                and issue_info.get("linear_status") == "Done"
+            ):
+                # Extract the issue title from the key
+                issue_title = key.replace("github_issue:", "")
+                self.__close_issue(issue_title)
