@@ -12,6 +12,7 @@ services:
     ports:
       - "8000:8000"
     command: ["python", "main.py"]
+    restart: always
 
   redis:
     image: redis:7
