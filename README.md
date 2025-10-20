@@ -69,15 +69,15 @@ This project addresses the common need for engineering and product teams to keep
   python main.py
   ```
 - **With Docker:**
-  1. Build the Docker image:
+  1. Build and start all services (including Redis) using Docker Compose:
      ```sh
-     docker build -t github-issues-linear .
+     docker-compose up --build
      ```
-  2. Run the container:
+  2. Run the main application container (if not using Compose for everything):
      ```sh
      docker run --env-file .env github-issues-linear
      ```
-  3. Run tests:
+  3. Run tests inside the container:
      ```sh
      docker run github-issues-linear pytest
      ```
