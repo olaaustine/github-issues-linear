@@ -54,7 +54,7 @@ def test_get_data_and_populate_variables_success(mock_post):
     assert var_list[1].title == "t2"
 
 
-@patch("src.linear.linear_create_issues.redis_client")
+@patch("src.linear.linear_cache.redis_client")
 @patch("src.linear.linear.requests.post")
 def test_run_query_creates_new(mock_post, mock_redis):
     # Mock the response for team lookup

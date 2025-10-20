@@ -1,14 +1,11 @@
 import requests
 from github.Issue import Issue
 from loguru import logger
-import json
 from src.variables import Variables
 from src.graph_query import mutation
 from src.linear.linear import LinearService
-from src.redis import get_redis_client
 from src.linear.linear import response_status_check
-
-redis_client = get_redis_client()
+from src.linear.linear_cache import LinearCache
 
 
 class LinearCreateIssueService:
@@ -69,16 +66,9 @@ class LinearCreateIssueService:
                 )
 
             ticket = tickets.get("issue")
+            if ticket is None:
+                raise RuntimeError(
+                    f"Create failed for '{input_obj.get('title')}': No ticket data returned."
+                )
             logger.success(f"Created {ticket.get('identifier')} → {ticket.get('url')}")
-            self.__cache_linear_ticket(var.title, ticket)
-
-    def __cache_linear_ticket(
-        self, gt_issue_title: str, ticket: dict, ttl_seconds: int = 0
-    ):
-        key = f"github_issue:{gt_issue_title}"
-        value = {
-            "linear_id": ticket.get("identifier"),
-            "linear_url": ticket.get("url"),
-            "linear_status": ticket.get("state", {}).get("name"),
-        }
-        redis_client.set(key, json.dumps(value))
+            LinearCache.cache_linear_ticket(var.title, ticket)

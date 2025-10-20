@@ -1,9 +1,9 @@
 import requests
 from loguru import logger
-import json
 from src.graph_query import GET_TICKETS_STATUS
 from src.redis import get_redis_client
 from src.linear.linear import LinearService, response_status_check
+from src.linear.linear_cache import LinearCache
 
 redis_client = get_redis_client()
 
@@ -50,19 +50,5 @@ class LinearUpdateIssueService:
 
     def __update_ticket_status_in_redis(self, ticket_title: str, status: str) -> None:
         """Update the ticket status in Redis cache."""
-        redis_key = f"github_issue:{ticket_title}"
-        existing = redis_client.get(redis_key)
-        data = {}
-        if existing:
-            try:
-                data = json.loads(existing)
-            except json.JSONDecodeError:
-                logger.error(f"Failed to decode JSON from Redis for key '{redis_key}'")
-                data = {}
-            except Exception as e:
-                logger.error(
-                    f"Unexpected error while reading Redis key '{redis_key}': {e}"
-                )
-                data = {}
-        data["linear_status"] = status
-        redis_client.set(redis_key, json.dumps(data))
+        key = f"github_issue:{ticket_title}"
+        LinearCache.update_ticket_status(key, status)
