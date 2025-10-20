@@ -6,7 +6,7 @@ from src.linear_service import LinearService
 # Test for get_data_and_populate_variables
 @patch("src.linear_service.requests.post")
 def test_get_data_and_populate_variables_raises_exception(mock_post):
-    # Mock the response for team lookup
+    # Do not mock team_id to simulate failure
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.text = '{"data":{}}'
