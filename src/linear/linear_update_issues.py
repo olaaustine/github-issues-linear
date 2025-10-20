@@ -40,7 +40,7 @@ class LinearUpdateIssueService:
         response_status_check(resp)
         data = resp.json()
         try:
-            status = data["data"]["issue"]["state"]["name"]
+            status = data.get("data", {}).get("issue", {}).get("state", {}).get("name")
             return status
         except (KeyError, TypeError) as e:
             logger.error(
