@@ -1,6 +1,7 @@
 import requests
 from loguru import logger
 from uuid import UUID
+from functools import cached_property
 from src.config import Config
 from src.errors import GraphQLError, ResponseNot200Error
 from src.graph_query import TEAM_BY_NAME, QUERY_WITH_TEAM, GET_TICKETS_STATUS
@@ -18,37 +19,32 @@ def response_status_check(response: requests.Response):
 class LinearService:
     def __init__(self):
         self._config = Config()
-        self._linear_api_key = self._config.linear_api_key
-        self._team_id_str = self._config.team_id
-        self._api_url = self._config.linear_api_url
-        self._headers = self.return_headers()
-        self._team_id = self.get_team_id_by_name()
 
-    @property
+    @cached_property
     def team_id(self) -> UUID | None:
-        return self._team_id
+        return self.get_team_id_by_name()
 
-    @property
+    @cached_property
     def team_name(self) -> str:
-        return self._team_id_str
+        return self._config.team_id
 
-    @property
+    @cached_property
     def api_url(self) -> str:
-        return self._api_url
+        return self._config.linear_api_url
 
-    @property
+    @cached_property
     def headers(self) -> dict:
-        return self._headers
+        return self.return_headers()
 
     @property
     def linear_api_key(self) -> str:
-        return self._linear_api_key
+        return self._config.linear_api_key
 
     def return_headers(self) -> dict:
         """Return headers for Linear API requests"""
         return {
             "Content-Type": "application/json",
-            "Authorization": self._linear_api_key,
+            "Authorization": self.linear_api_key,
         }
 
     def get_team_id_by_name(self) -> UUID | None:
@@ -61,21 +57,19 @@ class LinearService:
                 raise ValueError(f"Unexpected teams format: {teams}")
             return teams
 
-        payload = {"query": TEAM_BY_NAME, "variables": {"name": self._team_id_str}}
+        payload = {"query": TEAM_BY_NAME, "variables": {"name": self.team_name}}
         resp = requests.post(
-            self._api_url, json=payload, headers=self._headers, timeout=10
+            self.api_url, json=payload, headers=self.headers, timeout=10
         )
         response_status_check(resp)
         body = resp.json()
 
         nodes = get_team_nodes(body)
         if len(nodes) == 0:
-            raise RuntimeError(
-                f"Warning : No teams found for name '{self._team_id_str}'"
-            )
+            raise RuntimeError(f"Warning : No teams found for name '{self.team_name}'")
 
         for node in nodes:
-            if node["name"].strip().lower() == self._team_id_str.strip().lower():
+            if node["name"].strip().lower() == self.team_name.strip().lower():
                 return node["id"]
 
         return None
@@ -92,10 +86,10 @@ class LinearService:
 
         payload = {
             "query": QUERY_WITH_TEAM,
-            "variables": {"title": issue_title, "teamId": str(self._team_id)},
+            "variables": {"title": issue_title, "teamId": str(self.team_id)},
         }
         response = requests.post(
-            self._api_url, json=payload, headers=self._headers, timeout=10
+            self.api_url, json=payload, headers=self.headers, timeout=10
         )
         response_status_check(response)
         body = response.json()
@@ -116,9 +110,9 @@ class LinearService:
         """Fetch the current status of a Linear ticket by its identifier."""
         query = GET_TICKETS_STATUS
         resp = requests.post(
-            self._api_url,
+            self.api_url,
             json={"query": query, "variables": {"id": ticket_identifier}},
-            headers=self._headers,
+            headers=self.headers,
         )
         response_status_check(resp)
         data = resp.json()

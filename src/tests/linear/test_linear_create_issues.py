@@ -38,7 +38,7 @@ def test_get_data_and_populate_variables_success(mock_post):
     mock_post.return_value = mock_response
     service = LinearCreateIssueService()
     # Set the private attribute directly
-    service.linear_service._team_id = valid_uuid
+    service.linear_service.team_id = valid_uuid
     issue1 = MagicMock()
     issue1.title = "t1"
     issue1.body = "b1"
@@ -55,45 +55,36 @@ def test_get_data_and_populate_variables_success(mock_post):
 
 
 @patch("src.linear.linear_cache.redis_client")
-@patch("src.linear.linear.requests.post")
+@patch("src.linear.linear_create_issues.requests.post")
 def test_run_query_creates_new(mock_post, mock_redis):
-    # Mock the response for team lookup
-    mock_team_response = MagicMock()
-    mock_team_response.status_code = 200
-    mock_team_response.text = '{"data":{}}'
-    mock_team_response.json.return_value = {
-        "data": {"teams": {"nodes": [{"id": "tid", "name": "tid"}]}}
-    }
-    mock_post.side_effect = [
-        mock_team_response,
-        MagicMock(
-            status_code=200,
-            json=MagicMock(
-                return_value={
-                    "data": {
-                        "issueCreate": {
-                            "success": True,
-                            "issue": {
-                                "identifier": "ISSUE-1",
-                                "url": "http://example.com",
-                            },
-                        }
+    creation_response = MagicMock(
+        status_code=200,
+        json=MagicMock(
+            return_value={
+                "data": {
+                    "issueCreate": {
+                        "success": True,
+                        "issue": {
+                            "identifier": "ISSUE-1",
+                            "url": "http://example.com",
+                        },
                     }
                 }
-            ),
+            }
         ),
-    ]
+    )
+    mock_post.return_value = creation_response
 
     mock_exists = MagicMock()
     mock_exists.return_value = False
 
-    linear_service = LinearCreateIssueService()
-    linear_service._LinearCreateIssueService__confirm_if_ticket_exists = mock_exists
+    linear_create = LinearCreateIssueService()
+    linear_create.linear_service.confirm_if_ticket_exists = mock_exists
     var = MagicMock()
     var.title = "title"
     var.as_input.return_value = {"foo": "bar"}
 
     with patch("src.linear.linear.response_status_check") as mock_check:
         mock_check.return_value = None
-        linear_service.run_query([var])
-        assert mock_post.call_count == 2
+        linear_create.run_query([var])
+        assert mock_post.call_count == 1
