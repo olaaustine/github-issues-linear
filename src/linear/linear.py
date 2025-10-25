@@ -36,7 +36,7 @@ class LinearService:
     def headers(self) -> dict:
         return self.return_headers()
 
-    @property
+    @cached_property
     def linear_api_key(self) -> str:
         return self._config.linear_api_key
 
