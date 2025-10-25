@@ -14,8 +14,8 @@ def test_get_client_returns_github_instance():
     # new lets me skip real insantiation logic
     service = GitHubClientService.__new__(GitHubClientService)
     service._GitHubClientService__config = mock_config
-    service._GitHubClientService__client = mock_github("fake_key")
-    assert service._GitHubClientService__client is mock_github_instance
+    service.client = mock_github("fake_key")
+    assert service.client is mock_github_instance
 
 
 def test_get_repo_objects_returns_valid_repos():
@@ -32,7 +32,7 @@ def test_get_repo_objects_returns_valid_repos():
 
     service = GitHubClientService.__new__(GitHubClientService)
     service._GitHubClientService__config = mock_config_instance
-    service._GitHubClientService__client = mock_github_instance
+    service.client = mock_github_instance
     repos = service._GitHubClientService__get_repo_objects()
     assert repos == {mock_repo1, mock_repo2}
     assert mock_github_instance.get_repo.call_count == 2
@@ -54,7 +54,7 @@ def test_get_repo_objects_handles_exceptions():
 
     service = GitHubClientService.__new__(GitHubClientService)
     service._GitHubClientService__config = mock_config_instance
-    service._GitHubClientService__client = mock_github_instance
+    service.client = mock_github_instance
     repos = service._GitHubClientService__get_repo_objects()
     assert repos == {mock_repo1}
 
@@ -74,7 +74,7 @@ def test_get_repo_issues_returns_all_open_issues():
 
     service = GitHubClientService.__new__(GitHubClientService)
     service._GitHubClientService__config = mock_config_instance
-    service._GitHubClientService__client = mock_github_instance
+    service.client = mock_github_instance
     issues = service.get_repo_issues()
     assert issues == [mock_issue1, mock_issue2]
     mock_repo.get_issues.assert_called_once_with(state="open")

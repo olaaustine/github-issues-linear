@@ -2,6 +2,7 @@ from github import Github
 from typing import Set
 from loguru import logger
 import json
+from functools import cached_property
 from github.GithubException import GithubException
 from github.Issue import Issue
 from github.Repository import Repository
@@ -14,13 +15,16 @@ redis_client = get_redis_client()
 class GitHubClientService:
     def __init__(self):
         self.__config = Config()
-        self.__github_key = self.__config.github_key
-        self.__client = self.__get_client()
 
-    def __get_client(self) -> Github:
+    @cached_property
+    def github_key(self) -> str:
+        """Get GitHub API key from config"""
+        return self.__config.github_key
+
+    @cached_property
+    def client(self) -> Github:
         """Get GitHub client using the key from config"""
-        client = Github(self.__github_key)
-        return client
+        return Github(self.github_key)
 
     def __get_repo_objects(self) -> Set[Repository]:
         """Safely get repository objects from the list of repository names"""
@@ -28,7 +32,7 @@ class GitHubClientService:
         repo_objects = set()
         for repo_name in self.__config.repository:
             try:
-                repo = self.__client.get_repo(repo_name)
+                repo = self.client.get_repo(repo_name)
                 repo_objects.add(repo)
             except GithubException as e:
                 logger.error(
