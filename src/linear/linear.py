@@ -1,8 +1,9 @@
 import requests
+from loguru import logger
 from uuid import UUID
 from src.config import Config
 from src.errors import GraphQLError, ResponseNot200Error
-from src.graph_query import TEAM_BY_NAME, QUERY_WITH_TEAM
+from src.graph_query import TEAM_BY_NAME, QUERY_WITH_TEAM, GET_TICKETS_STATUS
 
 
 def response_status_check(response: requests.Response):
@@ -102,3 +103,30 @@ class LinearService:
         ticket = get_ticket_from_json(body)
 
         return ticket
+
+    def confirm_if_ticket_exists(self, issue_title: str) -> bool | None:
+        """Check if a ticket with the given issue title already exists in Linear in the same team."""
+        tickets = self.get_ticket_if_it_exists(issue_title)
+        logger.info(
+            f"Checked existence for title '{issue_title}': {len(tickets)} match(es)."
+        )
+        return len(tickets) > 0
+
+    def get_ticket_status(self, ticket_identifier: str) -> str | None:
+        """Fetch the current status of a Linear ticket by its identifier."""
+        query = GET_TICKETS_STATUS
+        resp = requests.post(
+            self._api_url,
+            json={"query": query, "variables": {"id": ticket_identifier}},
+            headers=self._headers,
+        )
+        response_status_check(resp)
+        data = resp.json()
+        try:
+            status = data.get("data", {}).get("issue", {}).get("state", {}).get("name")
+            return status
+        except (KeyError, TypeError) as e:
+            logger.error(
+                f"Failed to extract status for ticket '{ticket_identifier}': {e}"
+            )
+            return None

@@ -1,4 +1,5 @@
 from unittest.mock import patch, MagicMock
+from datetime import datetime
 from src.linear.linear_update_issues import LinearUpdateIssueService
 
 
@@ -8,7 +9,12 @@ def test_check_all_linear_ticket_statuses_internal_mocks():
     # Mock redis_client.scan_iter and redis_client.get/set
     with patch("src.linear.linear_update_issues.redis_client") as mock_redis:
         mock_redis.scan_iter.return_value = ["github_issue:Test Issue"]
-        mock_redis.get.return_value = '{"foo": "bar"}'
+        mock_redis.get.return_value = {
+            "linear_id": "TICKET-1",
+            "linear_url": "https://linear.app/TICKET-1",
+            "linear_status": "In Progress",
+            "updated_at": datetime.utcnow().isoformat(),
+        }
 
         # Mock internal methods on the service instance
         service.linear_service = MagicMock()
@@ -17,8 +23,8 @@ def test_check_all_linear_ticket_statuses_internal_mocks():
         ]
         with (
             patch.object(
-                service,
-                "_LinearUpdateIssueService__get_ticket_status",
+                service.linear_service,
+                "get_ticket_status",
                 return_value="Done",
             ),
             patch.object(

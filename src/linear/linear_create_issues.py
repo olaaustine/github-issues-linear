@@ -32,20 +32,12 @@ class LinearCreateIssueService:
 
         return variables
 
-    def __confirm_if_ticket_exists(self, issue_title: str) -> bool | None:
-        """Check if a ticket with the given issue title already exists in Linear in the same team."""
-        tickets = self.linear_service.get_ticket_if_it_exists(issue_title)
-        logger.info(
-            f"Checked existence for title '{issue_title}': {len(tickets)} match(es)."
-        )
-        return len(tickets) > 0
-
     def run_query(self, variables: list) -> None:
         """Create issues in Linear from the provided variables."""
         for var in variables:
             input_obj = var.as_input()
             # TODO: Cache check can be added here to reduce API calls
-            if self.__confirm_if_ticket_exists(var.title):
+            if self.linear_service.confirm_if_ticket_exists(var.title):
                 logger.info(
                     f"Issue with title '{var.title}' already exists. Skipping creation."
                 )
@@ -57,7 +49,6 @@ class LinearCreateIssueService:
             )
             response_status_check(resp)
             body = resp.json()
-
             tickets = (body.get("data") or {}).get("issueCreate") or {}
             if not tickets.get("success"):
                 # If creation failed, raise an error with details
