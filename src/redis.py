@@ -1,5 +1,6 @@
 import redis
 
+# Singleton level Redis client instance
 _redis_instance = None
 
 
