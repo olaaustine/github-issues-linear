@@ -8,10 +8,6 @@ class Variables(BaseModel):
     description: str | None = None
 
     def as_input(self):
-        return {
-            "input": {
-                "teamId": str(self.teamId),
-                "title": self.title,
-                "description": self.description,
-            }
-        }
+        data = self.model_dump()
+        data["teamId"] = str(data["teamId"])
+        return {"input": data}
