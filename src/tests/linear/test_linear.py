@@ -78,14 +78,14 @@ def test_get_ticket_if_it_exists_success(mock_post):
 
     service = LinearService.__new__(LinearService)
     service._config = mock_config
-    service._linear_api_key = mock_config.linear_api_key
-    service._team_id_str = mock_config.team_id
-    service._api_url = mock_config.linear_api_url
-    service._headers = {
+    service.linear_api_key = mock_config.linear_api_key
+    service.team_name = mock_config.team_id
+    service.api_url = mock_config.linear_api_url
+    service.headers = {
         "Content-Type": "application/json",
         "Authorization": mock_config.linear_api_key,
     }
-    service._team_id = "team-uuid"
+    service.team_id = "team-uuid"
     tickets = LinearService.get_ticket_if_it_exists(service, "Some Issue")
     assert tickets == [{"identifier": "ISSUE-1"}]
 
