@@ -9,8 +9,8 @@ from src.linear.linear_cache import LinearCache
 
 
 class LinearCreateIssueService:
-    def __init__(self):
-        self.linear_service = LinearService()
+    def __init__(self, linear_service: LinearService):
+        self.linear_service = linear_service
 
     def get_data_and_populate_variables(
         self, list_issues: list[Issue]

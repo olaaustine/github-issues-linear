@@ -7,8 +7,8 @@ redis_client = get_redis_client()
 
 
 class LinearUpdateIssueService:
-    def __init__(self):
-        self.linear_service = LinearService()
+    def __init__(self, linear_service: LinearService):
+        self.linear_service = linear_service
 
     def check_all_linear_ticket_statuses(self) -> None:
         """Check and update the Linear ticket status for all issues in Redis."""

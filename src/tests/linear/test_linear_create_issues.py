@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from src.linear.linear_create_issues import LinearCreateIssueService
+from src.linear.linear import LinearService
 
 
 # Test for get_data_and_populate_variables
@@ -15,7 +16,8 @@ def test_get_data_and_populate_variables_raises_exception(mock_post):
     }
     mock_post.return_value = mock_response
 
-    linear_service = LinearCreateIssueService()
+    service = LinearService()
+    linear_service = LinearCreateIssueService(service)
     issue1 = MagicMock()
     issue1.title = "t1"
     issue1.body = "b1"
@@ -36,9 +38,9 @@ def test_get_data_and_populate_variables_success(mock_post):
         "data": {"teams": {"nodes": [{"id": valid_uuid, "name": "tid"}]}}
     }
     mock_post.return_value = mock_response
-    service = LinearCreateIssueService()
-    # Set the private attribute directly
-    service.linear_service.team_id = valid_uuid
+    linear = LinearService()
+    linear.team_id = valid_uuid
+    service = LinearCreateIssueService(linear)
     issue1 = MagicMock()
     issue1.title = "t1"
     issue1.body = "b1"
@@ -78,8 +80,9 @@ def test_run_query_creates_new(mock_post, mock_redis):
     mock_exists = MagicMock()
     mock_exists.return_value = False
 
-    linear_create = LinearCreateIssueService()
-    linear_create.linear_service.confirm_if_ticket_exists = mock_exists
+    service = LinearService()
+    service.confirm_if_ticket_exists = mock_exists
+    linear_create = LinearCreateIssueService(service)
     var = MagicMock()
     var.title = "title"
     var.as_input.return_value = {"foo": "bar"}
