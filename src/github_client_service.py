@@ -13,8 +13,8 @@ redis_client = get_redis_client()
 
 
 class GitHubClientService:
-    def __init__(self):
-        self.__config = Config()
+    def __init__(self, config: Config):
+        self.__config = config
 
     @cached_property
     def github_key(self) -> str:

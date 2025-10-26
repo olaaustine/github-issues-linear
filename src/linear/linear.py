@@ -17,8 +17,8 @@ def response_status_check(response: requests.Response):
 
 
 class LinearService:
-    def __init__(self):
-        self._config = Config()
+    def __init__(self, config: Config):
+        self._config = config
 
     @cached_property
     def team_id(self) -> UUID | None:
