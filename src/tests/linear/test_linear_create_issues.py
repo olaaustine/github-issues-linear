@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from src.linear.linear_create_issues import LinearCreateIssueService
 from src.linear.linear import LinearService
+from src.config import Config
 
 
 # Test for get_data_and_populate_variables
@@ -16,7 +17,8 @@ def test_get_data_and_populate_variables_raises_exception(mock_post):
     }
     mock_post.return_value = mock_response
 
-    service = LinearService()
+    config = Config()
+    service = LinearService(config)
     linear_service = LinearCreateIssueService(service)
     issue1 = MagicMock()
     issue1.title = "t1"
@@ -38,7 +40,8 @@ def test_get_data_and_populate_variables_success(mock_post):
         "data": {"teams": {"nodes": [{"id": valid_uuid, "name": "tid"}]}}
     }
     mock_post.return_value = mock_response
-    linear = LinearService()
+    config = Config()
+    linear = LinearService(config)
     linear.team_id = valid_uuid
     service = LinearCreateIssueService(linear)
     issue1 = MagicMock()
@@ -79,8 +82,9 @@ def test_run_query_creates_new(mock_post, mock_redis):
 
     mock_exists = MagicMock()
     mock_exists.return_value = False
+    config = Config()
 
-    service = LinearService()
+    service = LinearService(config)
     service.confirm_if_ticket_exists = mock_exists
     linear_create = LinearCreateIssueService(service)
     var = MagicMock()

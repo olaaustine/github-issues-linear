@@ -2,10 +2,12 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime
 from src.linear.linear_update_issues import LinearUpdateIssueService
 from src.linear.linear import LinearService
+from src.config import Config
 
 
 def test_check_all_linear_ticket_statuses_internal_mocks():
-    linear = LinearService()
+    config = Config()
+    linear = LinearService(config)
     # make these methods callables returning the expected values
     linear.get_ticket_if_it_exists = MagicMock(
         return_value=[{"identifier": "TICKET-1"}]
